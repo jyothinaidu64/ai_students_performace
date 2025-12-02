@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Timetables{% endblock %}
+{% block nav_timetable_active %}active{% endblock %}
+{% block page_title %}Timetables – Classes{% endblock %}
+
+{% block content %}
+<div class="table-wrapper">
+    <div class="table-title">
+        Classes
+        <span class="text-muted-small">Select a class to view its timetable.</span>
+    </div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Class</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for c in classes %}
+            <tr>
+                <td>{{ c }}</td>
+                <td>
+                    <a href="{% url 'timetable_class_view' c.id %}" class="btn btn-sm btn-outline-primary">
+                        View timetable
+                    </a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="2">No classes found.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

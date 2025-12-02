@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}My Concerns • School Intelligence{% endblock %}
+{% block page_title %}My Concerns{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="mb-0">Submitted concerns</h5>
+        <p class="text-muted small mb-0">
+            View all concerns raised with the school and their status.
+        </p>
+    </div>
+    <a href="{% url 'communication:create_concern' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Raise a new concern
+    </a>
+</div>
+
+{% if concerns %}
+    <div class="list-group">
+        {% for c in concerns %}
+            <div class="list-group-item border-0 border-bottom">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="fw-semibold">
+                            {{ c.title|truncatechars:80 }}
+                        </div>
+                        <div class="small text-muted mb-1">
+                            {{ c.message|truncatechars:160 }}
+                        </div>
+                        <div class="small text-muted">
+                            Submitted on {{ c.created_at|date:"d M Y, H:i" }}
+                            {% if c.handled_by %}
+                                • Handled by {{ c.handled_by.get_full_name|default:c.handled_by.username }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        {% if c.status == "OPEN" %}
+                            <span class="badge bg-warning-subtle text-warning">
+                                <i class="bi bi-exclamation-circle me-1"></i> Open
+                            </span>
+                        {% elif c.status == "IN_PROGRESS" %}
+                            <span class="badge bg-info-subtle text-info">
+                                <i class="bi bi-arrow-repeat me-1"></i> In progress
+                            </span>
+                        {% elif c.status == "RESOLVED" %}
+                            <span class="badge bg-success-subtle text-success">
+                                <i class="bi bi-check-circle me-1"></i> Resolved
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">
+                                {{ c.status }}
+                            </span>
+                        {% endif %}
+                        {% if c.updated_at %}
+                            <div class="small text-muted mt-1">
+                                Updated {{ c.updated_at|date:"d M Y, H:i" }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <p class="mb-2">You haven’t raised any concerns yet.</p>
+            <a href="{% url 'communication:create_concern' %}" class="btn btn-primary btn-sm">
+                Raise a concern
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

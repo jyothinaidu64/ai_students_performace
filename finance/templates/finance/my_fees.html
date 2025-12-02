@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}My Fees • School Intelligence{% endblock %}
+{% block page_title %}My Fees{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-title">Total Payable</div>
+            <div class="card-body">
+                <h4 class="mb-0">
+                    ₹ {{ total_net|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    After discounts, for all assigned fees.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Total Paid</div>
+            <div class="card-body">
+                <h4 class="mb-0 text-success">
+                    ₹ {{ total_paid|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    All payments recorded till now.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Balance</div>
+            <div class="card-body">
+                <h4 class="mb-0 {% if total_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                    ₹ {{ total_balance|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    Amount still due.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title d-flex justify-content-between align-items-center">
+        <span>Fee Breakdown</span>
+        <span class="text-muted small">
+            {{ student.user.get_full_name|default:student.user.username }} • {{ student.school_class }}
+        </span>
+    </div>
+
+    {% if rows %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Fee</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Discount</th>
+                        <th class="text-end">Net</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>{{ row.fee_name }}</td>
+                            <td class="text-end">₹ {{ row.total|floatformat:2 }}</td>
+                            <td class="text-end">₹ {{ row.discount|floatformat:2 }}</td>
+                            <td class="text-end">₹ {{ row.net|floatformat:2 }}</td>
+                            <td class="text-end text-success">₹ {{ row.paid|floatformat:2 }}</td>
+                            <td class="text-end {% if row.balance > 0 %}text-danger{% endif %}">
+                                ₹ {{ row.balance|floatformat:2 }}
+                            </td>
+                            <td class="text-center">
+                                {% if row.balance == 0 %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        Paid
+                                    </span>
+                                {% elif row.paid == 0 %}
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        Not Paid
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        Partially Paid
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {# Payment history row #}
+                        <tr>
+                            <td colspan="7" class="bg-body-tertiary small">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">
+                                        Payment history for <strong>{{ row.fee_name }}</strong>
+                                    </span>
+                                </div>
+                                {% with assignment=row.assignment %}
+                                    {% if assignment.payments.all %}
+                                        <div class="table-responsive mt-1">
+                                            <table class="table table-xs table-borderless mb-0">
+                                                <thead>
+                                                    <tr class="text-muted">
+                                                        <th style="width: 20%;">Date</th>
+                                                        <th style="width: 20%;">Amount</th>
+                                                        <th style="width: 20%;">Mode</th>
+                                                        <th style="width: 40%;">Receipt</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for payment in assignment.payments.all %}
+                                                        <tr>
+                                                            <td>{{ payment.date|date:"d M Y" }}</td>
+                                                            <td>₹ {{ payment.amount|floatformat:2 }}</td>
+                                                            <td>
+                                                                {% if payment.mode == "CASH" %}
+                                                                    Cash
+                                                                {% elif payment.mode == "CARD" %}
+                                                                    Card
+                                                                {% else %}
+                                                                    Online
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                <a href="{% url 'finance:receipt_detail' payment.id %}"
+                                                                   class="btn btn-link btn-sm p-0">
+                                                                    View receipt #{{ payment.receipt_number }}
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    {% empty %}
+                                                        <tr>
+                                                            <td colspan="4" class="text-muted">
+                                                                No payments recorded yet for this fee.
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <div class="mt-1 text-muted">
+                                            No payments recorded yet for this fee.
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted">
+                No fee assignments found yet. Please contact the school office if you believe this is an error.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

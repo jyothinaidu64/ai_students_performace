@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+
+{% block title %}Timetable – {{ school_class }}{% endblock %}
+{% block nav_timetable_active %}active{% endblock %}
+{% block page_title %}Timetable – {{ school_class }}{% endblock %}
+
+{% block content %}
+
+<div class="card-grid">
+    <div class="card">
+        <div class="card-title">Class</div>
+        <div class="card-value">{{ school_class }}</div>
+        <div class="card-subtext">
+            Weekly timetable overview.
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Details</div>
+        <div class="card-subtext">
+            <span class="text-muted-small">
+                Days: Monday – Friday<br>
+                Periods: {{ periods|length }} per day
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Actions: regenerate + print -->
+<div class="table-wrapper" style="margin-bottom: 1rem;">
+    <div class="table-title d-flex justify-content-between align-items-center">
+        <span>Timetable Actions</span>
+        <div class="d-flex gap-2">
+            <form method="post" action="{% url 'timetable_regenerate_for_class' school_class.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-arrow-clockwise" style="margin-right:4px;"></i>
+                    Regenerate Timetable
+                </button>
+            </form>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print();">
+                <i class="bi bi-printer" style="margin-right:4px;"></i>
+                Print Timetable
+            </button>
+        </div>
+    </div>
+    <p class="text-muted-small mb-0">
+        Regenerate uses the OR-Tools solver to recompute the timetable for <strong>{{ school_class }}</strong>.
+    </p>
+</div>
+
+<!-- Timetable grid -->
+<div class="table-wrapper">
+    <div class="table-title">
+        Timetable Grid
+        <span class="text-muted-small">
+            Hover to see teacher usernames.
+        </span>
+    </div>
+
+    <div class="timetable-grid-wrapper">
+        <table class="timetable-grid">
+            <thead>
+            <tr>
+                <th class="timetable-corner">Day / Period</th>
+                {% for p in periods %}
+                    <th>Period {{ p }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for day_code, day_label in days %}
+                <tr>
+                    <th class="timetable-day">{{ day_label }}</th>
+                    {% for p in periods %}
+                        {% with cell=grid|get_item:day_code|get_item:p %}
+                            {% if cell %}
+                                <td class="timetable-cell timetable-cell-filled">
+                                    <div class="timetable-subject">{{ cell.subject.name }}</div>
+                                    <div class="timetable-teacher"
+                                         title="{{ cell.teacher.get_full_name|default:cell.teacher.username }}">
+                                        {{ cell.teacher.username }}
+                                    </div>
+                                </td>
+                            {% else %}
+                                <td class="timetable-cell timetable-cell-empty">
+                                    <span class="timetable-empty-text">Free</span>
+                                </td>
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+
+{% block title %}My Timetable{% endblock %}
+{% block nav_teacher_timetable_active %}active{% endblock %}
+{% block page_title %}My Timetable{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <div class="card-title">Teacher</div>
+    <div class="card-value">{{ teacher.get_full_name|default:teacher.username }}</div>
+    <div class="card-subtext">
+        Weekly teaching schedule across all classes.
+    </div>
+</div>
+
+<div class="table-wrapper" style="margin-top: 1rem;">
+    <div class="table-title d-flex justify-content-between align-items-center">
+        <span>Timetable Grid</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print();">
+            <i class="bi bi-printer" style="margin-right:4px;"></i>
+            Print Timetable
+        </button>
+    </div>
+
+    <div class="timetable-grid-wrapper">
+        <table class="timetable-grid">
+            <thead>
+            <tr>
+                <th class="timetable-corner">Day / Period</th>
+                {% for p in periods %}
+                    <th>Period {{ p }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for day_code, day_label in days %}
+                <tr>
+                    <th class="timetable-day">{{ day_label }}</th>
+                    {% for p in periods %}
+                        {% with cells=grid|get_item:day_code|get_item:p %}
+                            {% if cells and cells|length > 0 %}
+                                <td class="timetable-cell timetable-cell-filled">
+                                    {% for entry in cells %}
+                                        <div class="timetable-subject">{{ entry.subject.name }}</div>
+                                        <div class="timetable-teacher">
+                                            {{ entry.school_class }}
+                                        </div>
+                                        {% if not forloop.last %}
+                                            <hr style="margin:4px 0;">
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                            {% else %}
+                                <td class="timetable-cell timetable-cell-empty">
+                                    <span class="timetable-empty-text">Free</span>
+                                </td>
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

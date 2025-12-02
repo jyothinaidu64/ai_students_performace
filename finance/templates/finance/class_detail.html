@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Class Finance • School Intelligence{% endblock %}
+{% block page_title %}Class Finance{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    {% if class_obj %}
+        <h5 class="mb-1">Class: {{ class_obj }}</h5>
+        <p class="text-muted small mb-0">
+            Per-student fee summary for this class.
+        </p>
+    {% else %}
+        <h5 class="mb-1">Class not found</h5>
+        <p class="text-muted small mb-0">
+            No fee assignments found for the selected class.
+        </p>
+    {% endif %}
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-title">Total Assigned</div>
+            <div class="card-body">
+                <h4 class="mb-0">
+                    ₹ {{ total_assigned|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    After discounts, for all students in this class.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Total Paid</div>
+            <div class="card-body">
+                <h4 class="mb-0 text-success">
+                    ₹ {{ total_paid|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    All payments recorded so far.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Total Balance</div>
+            <div class="card-body">
+                <h4 class="mb-0 {% if total_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                    ₹ {{ total_balance|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    Total outstanding amount.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title d-flex justify-content-between align-items-center">
+        <span>Per-student summary</span>
+        <a href="{% url 'finance:overview' %}" class="btn btn-outline-secondary btn-sm">
+            ← Back to Finance Overview
+        </a>
+    </div>
+
+    {% if rows %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th class="text-end">Assigned (Net)</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>
+                                {{ row.student.user.get_full_name|default:row.student.user.username }}
+                            </td>
+                            <td class="text-end">
+                                ₹ {{ row.assigned|floatformat:2 }}
+                            </td>
+                            <td class="text-end text-success">
+                                ₹ {{ row.paid|floatformat:2 }}
+                            </td>
+                            <td class="text-end {% if row.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                ₹ {{ row.balance|floatformat:2 }}
+                            </td>
+                            <td class="text-center">
+                                {% if row.balance == 0 %}
+                                    <span class="badge bg-success-subtle text-success">Paid</span>
+                                {% elif row.paid == 0 %}
+                                    <span class="badge bg-danger-subtle text-danger">Not Paid</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning">Partially Paid</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted">
+                No fee data found for this class.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

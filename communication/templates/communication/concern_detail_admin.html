@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <h2>Concern Details</h2>
+
+  <div class="card mt-3">
+    <div class="card-body">
+      <h4 class="card-title">{{ concern.title }}</h4>
+      <h6 class="card-subtitle mb-2 text-muted">
+        Student: {{ concern.student }}<br>
+        Created: {{ concern.created_at|date:"d M Y, H:i" }}
+      </h6>
+      <p class="card-text mt-3">{{ concern.message }}</p>
+
+      <p class="mt-3">
+        <strong>Current Status:</strong>
+        {% if concern.status == "OPEN" %}
+          <span class="badge bg-danger">Open</span>
+        {% elif concern.status == "IN_PROGRESS" %}
+          <span class="badge bg-warning text-dark">In Progress</span>
+        {% else %}
+          <span class="badge bg-success">Resolved</span>
+        {% endif %}
+      </p>
+
+      <p>
+        <strong>Handled By:</strong>
+        {% if concern.handled_by %}
+          {{ concern.handled_by.username }}
+        {% else %}
+          -
+        {% endif %}
+      </p>
+
+      <hr>
+
+      <form method="POST" class="mt-2">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="status" class="form-label">Update Status</label>
+          <select name="status" id="status" class="form-select">
+            <option value="OPEN" {% if concern.status == "OPEN" %}selected{% endif %}>Open</option>
+            <option value="IN_PROGRESS" {% if concern.status == "IN_PROGRESS" %}selected{% endif %}>In Progress</option>
+            <option value="RESOLVED" {% if concern.status == "RESOLVED" %}selected{% endif %}>Resolved</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary">Save</button>
+        <a href="{% url 'communication:all_concerns' %}" class="btn btn-secondary ms-2">Back</a>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

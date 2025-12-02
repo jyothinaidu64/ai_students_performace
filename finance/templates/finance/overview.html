@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Finance Overview • School Intelligence{% endblock %}
+{% block page_title %}Finance Overview{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-title">Total Assigned</div>
+            <div class="card-body">
+                <h4 class="mb-0">
+                    ₹ {{ total_assigned|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    Sum of all net fee assignments.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Total Collected</div>
+            <div class="card-body">
+                <h4 class="mb-0 text-success">
+                    ₹ {{ total_paid|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    All recorded fee payments.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Outstanding</div>
+            <div class="card-body">
+                <h4 class="mb-0 text-danger">
+                    ₹ {{ total_outstanding|floatformat:2 }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    Assigned minus collected.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-title d-flex justify-content-between align-items-center">
+        <span>By Class</span>
+        <span class="text-muted small">
+            Per-class fee summary
+        </span>
+    </div>
+    {% if per_class_rows %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th class="text-center">Students</th>
+                        <th class="text-end">Assigned</th>
+                        <th class="text-end">Collected</th>
+                        <th class="text-end">Outstanding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in per_class_rows %}
+                        <tr>
+                            <td>
+                            <a href="{% url 'finance:class_detail' row.class_obj.id %}">
+                                     {{ row.class_obj }}
+                            </a>
+                            </td>
+                            <td class="text-center">{{ row.student_count }}</td>
+                            <td class="text-end">₹ {{ row.assigned|floatformat:2 }}</td>
+                            <td class="text-end text-success">₹ {{ row.paid|floatformat:2 }}</td>
+                            <td class="text-end text-danger">₹ {{ row.outstanding|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted small">
+                No fee assignments found yet.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

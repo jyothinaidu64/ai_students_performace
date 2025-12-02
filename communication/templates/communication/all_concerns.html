@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Parent Concerns • School Intelligence{% endblock %}
+{% block page_title %}Parent / Student Concerns{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="mb-1">All concerns</h5>
+        <p class="text-muted small mb-0">
+            Concerns raised by students/parents across the school.
+        </p>
+    </div>
+    <div>
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="small text-muted mb-0 me-1">Status:</label>
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == "all" %}selected{% endif %}>All</option>
+                <option value="open" {% if status_filter == "open" %}selected{% endif %}>Open</option>
+                <option value="in_progress" {% if status_filter == "in_progress" %}selected{% endif %}>In progress</option>
+                <option value="resolved" {% if status_filter == "resolved" %}selected{% endif %}>Resolved</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Concerns list</div>
+
+    {% if concerns %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Subject / Summary</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Handled by</th>
+                        <th class="text-end">Raised on</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in concerns %}
+                        <tr>
+                            <td>
+                                {{ c.student.user.get_full_name|default:c.student.user.username }}<br>
+                                <span class="text-muted small">Adm: {{ c.student.admission_number|default:"—" }}</span>
+                            </td>
+                            <td class="small">
+                                {{ c.student.school_class }}
+                            </td>
+                            <td class="small">
+                                {% if c.subject %}
+                                    <strong>{{ c.subject }}</strong><br>
+                                {% endif %}
+                                <span class="text-muted">
+                                    {{ c.message|default:c.description|truncatechars:100 }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if c.status == "OPEN" %}
+                                    <span class="badge bg-warning-subtle text-warning">Open</span>
+                                {% elif c.status == "IN_PROGRESS" %}
+                                    <span class="badge bg-info-subtle text-info">In progress</span>
+                                {% elif c.status == "RESOLVED" %}
+                                    <span class="badge bg-success-subtle text-success">Resolved</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        {{ c.status|default:"Unknown" }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center small">
+                                {% if c.handled_by %}
+                                    {{ c.handled_by.get_full_name|default:c.handled_by.username }}<br>
+                                    {% if c.handled_at %}
+                                        <span class="text-muted">
+                                            {{ c.handled_at|date:"d M Y" }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end small text-muted">
+                                {{ c.created_at|date:"d M Y, H:i" }}
+                            </td>
+                        </tr>
+                        {% if c.response %}
+                            <tr>
+                                <td colspan="6" class="bg-body-tertiary small">
+                                    <strong>School response:</strong><br>
+                                    {{ c.response|linebreaksbr }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted">
+                No concerns found for this filter.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

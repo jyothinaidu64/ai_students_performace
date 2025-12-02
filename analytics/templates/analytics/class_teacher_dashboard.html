@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Class Dashboard{% endblock %}
+{% block nav_class_active %}active{% endblock %}
+{% block page_title %}Class Teacher Dashboard{% endblock %}
+
+{% block content %}
+{% if error %}
+    <div class="card">
+        <div class="card-title">Error</div>
+        <div class="card-subtext">{{ error }}</div>
+    </div>
+{% else %}
+        <!-- Teacher Copilot -->
+    <div class="card" style="margin-bottom:1rem;">
+        <div class="card-title">Teacher Copilot</div>
+        {% if insights %}
+            <ul style="font-size:0.8rem; padding-left:1.1rem; margin-bottom:0;">
+                {% for item in insights %}
+                    <li>
+                        {% if item.severity == "high" %}
+                            <span class="pill pill-high">Priority</span>
+                        {% elif item.severity == "medium" %}
+                            <span class="pill pill-low">Attention</span>
+                        {% endif %}
+                        {{ item.text }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="card-subtext">
+                No specific insights at the moment.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="table-wrapper" style="margin-bottom: 1rem;">
+        <div class="table-title d-flex justify-content-between align-items-center">
+            <span>Filters</span>
+            <!-- Export CSV link (keeps current filters) -->
+            <a href="{% url 'class_teacher_export_csv' %}?risk={{ selected_risk }}&sort_by={{ sort_by }}&search={{ search_query|urlencode }}"
+               class="btn btn-sm btn-outline-light">
+                Export CSV
+            </a>
+        </div>
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label" style="color:#9ca3af; font-size:0.85rem;">Risk level</label>
+                <select name="risk" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="all" {% if selected_risk == "all" %}selected{% endif %}>All</option>
+                    <option value="high" {% if selected_risk == "high" %}selected{% endif %}>High only</option>
+                    <option value="low" {% if selected_risk == "low" %}selected{% endif %}>Low only</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label" style="color:#9ca3af; font-size:0.85rem;">Sort by</label>
+                <select name="sort_by" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="risk_desc" {% if sort_by == "risk_desc" %}selected{% endif %}>
+                        Risk probability (high → low)
+                    </option>
+                    <option value="risk_asc" {% if sort_by == "risk_asc" %}selected{% endif %}>
+                        Risk probability (low → high)
+                    </option>
+                    <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>
+                        Student name (A → Z)
+                    </option>
+                    <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>
+                        Student name (Z → A)
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label" style="color:#9ca3af; font-size:0.85rem;">Search</label>
+                <input type="text" name="search"
+                       value="{{ search_query }}"
+                       class="form-control form-control-sm bg-dark text-light border-secondary"
+                       placeholder="Username / Admission No">
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    Apply
+                </button>
+            </div>
+        </form>
+    </div>
+        <div class="card">
+            <div class="card-title">Class</div>
+            <div class="card-value">{{ school_class }}</div>
+            <div class="card-subtext">
+                You are the class teacher.
+                {% if model_info %}
+                    <br>
+                    <span class="text-muted-small">
+                        Model last trained: {{ model_info.last_trained_at|date:"Y-m-d" }}<br>
+                        Accuracy: {{ model_info.accuracy|floatformat:2 }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+
+    <!-- Summary cards -->
+    <div class="card-grid">
+        <div class="card">
+            <div class="card-title">Class</div>
+            <div class="card-value">{{ school_class }}</div>
+            <div class="card-subtext">You are the class teacher.</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Total Students (with risk scores)</div>
+            <div class="card-value">{{ total }}</div>
+            <div class="card-subtext">After applying filters.</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Risk Breakdown</div>
+            <div class="card-subtext" style="margin-bottom: 0.5rem;">
+                <span class="pill pill-high">High: {{ high_count }}</span>
+                &nbsp;
+                <span class="pill pill-low">Low: {{ low_count }}</span>
+            </div>
+            <canvas id="classRiskChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <div class="table-title">
+            Students in {{ school_class }} (sorted by '{{ sort_by }}')
+        </div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Student</th>
+                <th>Risk</th>
+                <th>Probability</th>
+                <th>Summary</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td>{{ row.student.user.username }}</td>
+                    <td>
+                        {% if row.risk_label == "High" %}
+                            <span class="pill pill-high">High</span>
+                        {% else %}
+                            <span class="pill pill-low">Low</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.risk_proba|floatformat:2 }}</td>
+                    <td style="font-size:0.75rem; color:#9ca3af;">
+                        {{ row.explanation }}
+                    </td>
+</tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No students with risk scores for the selected filters.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        const ctx = document.getElementById('classRiskChart');
+        if (!ctx) return;
+
+        const highCount = {{ high_count|default:0 }};
+        const lowCount = {{ low_count|default:0 }};
+
+        const data = {
+            labels: ['High risk', 'Low risk'],
+            datasets: [{
+                label: 'Students in class',
+                data: [highCount, lowCount],
+            }]
+        };
+
+        const config = {
+            type: 'doughnut',
+            data: data,
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e5e7eb'
+                        }
+                    }
+                }
+            }
+        };
+
+        new Chart(ctx, config);
+    })();
+</script>
+{% endblock %}

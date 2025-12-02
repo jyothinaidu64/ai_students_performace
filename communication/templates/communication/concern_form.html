@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Raise a Concern • School Intelligence{% endblock %}
+{% block page_title %}Raise a Concern{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="card">
+            <div class="card-title">Tell us your concern</div>
+            <div class="card-subtext">
+                This form lets you share any issues about academics, behaviour, or school facilities.
+                Your class teacher or management will review it.
+            </div>
+
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-1 small">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label small">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text small">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'communication:my_concerns' %}" class="btn btn-outline-secondary btn-sm">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Submit Concern
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer text-muted small">
+                Please avoid sharing passwords or sensitive financial details in this form.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

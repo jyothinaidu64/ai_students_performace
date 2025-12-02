@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}My Leave Requests • School Intelligence{% endblock %}
+{% block page_title %}My Leave Requests{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="mb-0">Leave history</h5>
+        <p class="text-muted small mb-0">
+            Track all leave applications and their approval status.
+        </p>
+    </div>
+    <a href="{% url 'communication:create_leave' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> New Leave Request
+    </a>
+</div>
+
+{% if leave_requests %}
+    <div class="list-group">
+        {% for leave in leave_requests %}
+            <div class="list-group-item border-0 border-bottom">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="fw-semibold">
+                            {{ leave.start_date }} – {{ leave.end_date }}
+                            <span class="text-muted small">
+                                ({{ leave.start_date|date:"D, d M Y" }} to {{ leave.end_date|date:"D, d M Y" }})
+                            </span>
+                        </div>
+                        <div class="small text-muted mb-1">
+                            Reason: {{ leave.reason|truncatechars:120 }}
+                        </div>
+                        {% if leave.reviewed_by %}
+                            <div class="small text-muted">
+                                Reviewed by: {{ leave.reviewed_by.get_full_name|default:leave.reviewed_by.username }}
+                                {% if leave.reviewed_on %}
+                                    • {{ leave.reviewed_on|date:"d M Y, H:i" }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        {% if leave.status == "PENDING" %}
+                            <span class="badge bg-warning-subtle text-warning">
+                                <i class="bi bi-hourglass-split me-1"></i> Pending
+                            </span>
+                        {% elif leave.status == "APPROVED" %}
+                            <span class="badge bg-success-subtle text-success">
+                                <i class="bi bi-check-circle me-1"></i> Approved
+                            </span>
+                        {% elif leave.status == "REJECTED" %}
+                            <span class="badge bg-danger-subtle text-danger">
+                                <i class="bi bi-x-circle me-1"></i> Rejected
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">
+                                {{ leave.status }}
+                            </span>
+                        {% endif %}
+                        <div class="small text-muted mt-1">
+    Submitted on {{ leave.submitted_at|date:"d M Y, H:i" }}
+</div>
+
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <p class="mb-2">You haven’t submitted any leave requests yet.</p>
+            <a href="{% url 'communication:create_leave' %}" class="btn btn-primary btn-sm">
+                Apply for leave
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

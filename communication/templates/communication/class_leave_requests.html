@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Class Leave Requests • School Intelligence{% endblock %}
+{% block page_title %}Class Leave Requests{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="mb-1">Leave requests for class {{ class_section }}</h5>
+        <p class="text-muted small mb-0">
+            Review and approve/reject leave applications for your class.
+        </p>
+    </div>
+    <div>
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="small text-muted mb-0 me-1">Status:</label>
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == "all" %}selected{% endif %}>All</option>
+                <option value="pending" {% if status_filter == "pending" %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if status_filter == "approved" %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if status_filter == "rejected" %}selected{% endif %}>Rejected</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title d-flex justify-content-between align-items-center">
+        <span>Requests</span>
+    </div>
+
+    {% if leaves %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Dates</th>
+                        <th>Reason</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Reviewed by</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in leaves %}
+                        <tr>
+                            <td>
+                                {{ leave.student.user.get_full_name|default:leave.student.user.username }}<br>
+                                <span class="text-muted small">
+                                    {{ leave.student.school_class }}
+                                </span>
+                            </td>
+                            <td class="small">
+                                {{ leave.start_date|date:"d M Y" }} – {{ leave.end_date|date:"d M Y" }}<br>
+                                <span class="text-muted">
+                                    Submitted {{ leave.submitted_at|date:"d M Y, H:i" }}
+                                </span>
+                            </td>
+                            <td class="small">
+                                {{ leave.reason|linebreaksbr }}
+                            </td>
+                            <td class="text-center">
+                                {% if leave.status == "PENDING" %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-hourglass-split me-1"></i> Pending
+                                    </span>
+                                {% elif leave.status == "APPROVED" %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle me-1"></i> Approved
+                                    </span>
+                                {% elif leave.status == "REJECTED" %}
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        <i class="bi bi-x-circle me-1"></i> Rejected
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        {{ leave.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center small">
+                                {% if leave.reviewed_by %}
+                                    {{ leave.reviewed_by.get_full_name|default:leave.reviewed_by.username }}<br>
+                                    <span class="text-muted">
+                                        {{ leave.reviewed_at|date:"d M Y, H:i" }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if leave.status == "PENDING" %}
+                                    <form method="post" action="{% url 'communication:review_leave' leave.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-check-lg"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'communication:review_leave' leave.pk %}" class="d-inline ms-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted small">No actions</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted">
+                No leave requests found for this class and filter.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

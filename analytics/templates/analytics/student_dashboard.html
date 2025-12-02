@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard • School Intelligence{% endblock %}
+{% block page_title %}My Performance{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left column: performance + predictions -->
+    <div class="col-lg-8">
+
+        {# Risk Summary card #}
+        {% if risk_info %}
+        <div class="card mb-3">
+            <div class="card-title">Risk Summary</div>
+
+            {% if risk_info.available %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <p class="mb-1">
+                            Overall exam risk:
+                            {% if risk_info.label == "High" %}
+                                <span class="badge bg-danger-subtle text-danger">High Risk</span>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success">Low Risk</span>
+                            {% endif %}
+                        </p>
+                        <p class="text-muted small mb-0">
+                            Model risk probability:
+                            {{ risk_info.proba|floatformat:3 }}
+                        </p>
+                    </div>
+                </div>
+
+                {% if risk_info.explanation %}
+                    <p class="small mb-1">
+                        {{ risk_info.explanation }}
+                    </p>
+                {% endif %}
+
+                {% if risk_info.recommendations %}
+                    <div class="mt-2">
+                        <div class="small text-muted mb-1">System recommendations:</div>
+                        <ul class="small mb-0">
+                            {% for rec in risk_info.recommendations %}
+                                <li>{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="card-subtext">
+                    Risk score not available yet. Once you have enough tests recorded,
+                    the system will estimate your exam risk.
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {# Subject Performance #}
+        <div class="card mb-3">
+            <div class="card-title">Subject Performance</div>
+            {% if subject_stats %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th class="text-center">Average (%)</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in subject_stats %}
+                                <tr>
+                                    <td>{{ row.subject_name }}</td>
+                                    <td class="text-center">{{ row.avg_pct }}</td>
+                                    <td class="text-center">
+                                        {% if row.status == "Weak" %}
+                                            <span class="badge bg-danger-subtle text-danger">Weak</span>
+                                        {% elif row.status == "Average" %}
+                                            <span class="badge bg-warning-subtle text-warning">Average</span>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success">Strong</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="card-subtext">
+                    No assessments found yet. Once your tests are recorded,
+                    your subject-wise performance will appear here.
+                </div>
+            {% endif %}
+        </div>
+
+        {# Predicted Next Exam Scores #}
+        {% if next_scores %}
+        <div class="card mt-3">
+            <div class="card-title">Predicted Next Exam Scores</div>
+            <div class="card-subtext mb-2">
+                Based on your recent performance and attendance, these are estimated scores
+                for your upcoming tests.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th class="text-end">Predicted Score (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in next_scores %}
+                            <tr>
+                                <td>{{ row.subject_name }}</td>
+                                <td class="text-end fw-semibold">
+                                    {{ row.predicted_score }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right column: profile + Study Coach -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-title">My Profile</div>
+            <div class="card-body">
+                <p class="mb-1">
+                    <strong>Name:</strong>
+                    {{ student.user.get_full_name|default:student.user.username }}
+                </p>
+                <p class="mb-1">
+                    <strong>Class:</strong>
+                    {{ student.school_class }}
+                </p>
+                <p class="mb-0 text-muted small">
+                    This dashboard is generated from your recorded test scores and attendance.
+                </p>
+            </div>
+        </div>
+
+        {% if study_tips %}
+        <div class="card mt-3">
+            <div class="card-title d-flex justify-content-between align-items-center">
+                <span>Study Coach</span>
+                <span class="badge bg-secondary-subtle text-secondary small">Beta</span>
+            </div>
+            <div class="card-subtext mb-2">
+                Suggestions generated from your current performance profile.
+            </div>
+            <div class="card-body pt-0">
+                <ul class="small mb-0">
+                    {% for tip in study_tips %}
+                        <li class="mb-1">{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Topic Mastery Heatmap #}
+        {% if heatmap_data and heatmap_data.subjects %}
+        <div class="card mt-3">
+            <div class="card-title">Topic Mastery Heatmap</div>
+            <div class="card-subtext mb-3">
+                Visual representation of your mastery across different topics
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            {% for topic in heatmap_data.topics %}
+                            <th class="text-center small">{{ topic }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in heatmap_data.subjects %}
+                        <tr>
+                            <td class="fw-semibold">{{ subject }}</td>
+                            {% for topic in heatmap_data.topics %}
+                            <td class="text-center p-2">
+                                {% if subject in heatmap_data.details and topic in heatmap_data.details|get_item:subject %}
+                                    {% with score=heatmap_data.details|get_item:subject|get_item:topic %}
+                                    {% if score.mastery_score < 50 %}
+                                    <span class="badge bg-danger" style="width: 50px;">{{ score.mastery_score|floatformat:0 }}</span>
+                                    {% elif score.mastery_score < 70 %}
+                                    <span class="badge bg-warning" style="width: 50px;">{{ score.mastery_score|floatformat:0 }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success" style="width: 50px;">{{ score.mastery_score|floatformat:0 }}</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 small text-muted">
+                <span class="badge bg-danger">Red</span> Weak (0-50%) &nbsp;
+                <span class="badge bg-warning">Yellow</span> Average (50-70%) &nbsp;
+                <span class="badge bg-success">Green</span> Strong (70-100%)
+            </div>
+        </div>
+        {% endif %}
+
+        {# Weekly Study Plan #}
+        {% if study_plan and study_plan.daily_schedule %}
+        <div class="card mt-3">
+            <div class="card-title">Weekly Study Plan</div>
+            <div class="card-subtext mb-3">
+                Personalized schedule for {{ study_plan.week_start|date:"M d" }} - {{ study_plan.week_end|date:"M d, Y" }}
+            </div>
+            
+            {% for day, tasks in study_plan.daily_schedule.items %}
+            <div class="mb-3">
+                <h6 class="fw-semibold mb-2">{{ day }}</h6>
+                {% if tasks %}
+                <div class="list-group">
+                    {% for task in tasks %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ task.subject }} - {{ task.topic }}</div>
+                                <div class="small text-muted">{{ task.activity }}</div>
+                            </div>
+                            <span class="badge bg-primary">{{ task.duration }}h</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="small text-muted">Rest day</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="alert alert-info small mb-0">
+                <strong>Summary:</strong> {{ study_plan.summary.total_hours }}h total study time • 
+                {{ study_plan.summary.weak_topics_count }} weak topics targeted • 
+                {{ study_plan.summary.subjects_covered }} subjects covered
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <! -- Right column: profile + Study Coach -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-title">My Profile</div>
+            <div class="card-body">
+                <p class="mb-1">
+                    <strong>Name:</strong>
+                    {{ student.user.get_full_name|default:student.user.username }}
+                </p>
+                <p class="mb-1">
+                    <strong>Class:</strong>
+                    {{ student.school_class }}
+                </p>
+                <p class="mb-0 text-muted small">
+                    This dashboard is generated from your recorded test scores and attendance.
+                </p>
+            </div>
+        </div>
+
+        {% if study_tips %}\n        <div class="card mt-3">
+            <div class="card-title d-flex justify-content-between align-items-center">
+                <span>Study Coach</span>
+                <span class="badge bg-secondary-subtle text-secondary small">Beta</span>
+            </div>
+            <div class="card-subtext mb-2">
+                Suggestions generated from your current performance profile.
+            </div>
+            <div class="card-body pt-0">
+                <ul class="small mb-0">
+                    {% for tip in study_tips %}
+                        <li class="mb-1">{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

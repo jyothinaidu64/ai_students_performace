@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <h2>{% if is_edit %}Edit Announcement{% else %}Create Announcement{% endif %}</h2>
+
+  <form method="POST" class="mt-3">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label">Title</label>
+      {{ form.title }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Message</label>
+      {{ form.message }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Target Class (optional)</label>
+      <small class="d-block text-muted">Leave empty to send to whole school.</small>
+      {{ form.target_class_section }}
+    </div>
+
+    <div class="form-check mb-2">
+      {{ form.is_for_parents }} <label class="form-check-label">Visible to Parents</label>
+    </div>
+
+    <div class="form-check mb-3">
+      {{ form.is_for_students }} <label class="form-check-label">Visible to Students</label>
+    </div>
+
+    <button class="btn btn-primary">
+      {% if is_edit %}Update{% else %}Create{% endif %}
+    </button>
+  </form>
+</div>
+{% endblock %}

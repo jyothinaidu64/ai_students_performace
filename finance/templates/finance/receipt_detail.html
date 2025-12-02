@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ payment.receipt_number }} • School Intelligence{% endblock %}
+{% block page_title %}Payment Receipt{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h5 class="mb-1">Receipt #{{ payment.receipt_number }}</h5>
+                <p class="text-muted small mb-0">
+                    {{ payment.date|date:"d M Y" }} •
+                    {% if payment.mode == "CASH" %}Cash{% elif payment.mode == "CARD" %}Card{% else %}Online{% endif %}
+                </p>
+            </div>
+            <div class="text-end">
+                <div class="fw-semibold">₹ {{ payment.amount|floatformat:2 }}</div>
+                <div class="text-muted small">Amount received</div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h6 class="text-muted text-uppercase small mb-1">Student</h6>
+                <p class="mb-1">
+                    {{ payment.assignment.student.user.get_full_name|default:payment.assignment.student.user.username }}
+                </p>
+                <p class="mb-0 text-muted small">
+                    {{ payment.assignment.student.school_class }}<br>
+                    Admission No: {{ payment.assignment.student.admission_number|default:"—" }}
+                </p>
+            </div>
+            <div class="col-md-6 mt-3 mt-md-0">
+                <h6 class="text-muted text-uppercase small mb-1">Fee Details</h6>
+                <p class="mb-1">
+                    {{ payment.assignment.fee_structure.name }}
+                </p>
+                <p class="mb-0 text-muted small">
+                    Class: {{ payment.assignment.fee_structure.class_section }}<br>
+                    Total: ₹ {{ payment.assignment.total_amount|floatformat:2 }}<br>
+                    Discount: ₹ {{ payment.assignment.discount_amount|floatformat:2 }}<br>
+                    Net Payable: ₹ {{ payment.assignment.net_amount|floatformat:2 }}
+                </p>
+            </div>
+        </div>
+
+        <hr>
+
+        <p class="text-muted small mb-3">
+            This is a system-generated receipt from the School Intelligence Platform. If you have any questions,
+            please contact the school office.
+        </p>
+
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'finance:my_fees' %}" class="btn btn-secondary btn-sm">
+                ← Back to My Fees
+            </a>
+            <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

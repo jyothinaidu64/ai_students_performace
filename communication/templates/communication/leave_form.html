@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Apply for Leave • School Intelligence{% endblock %}
+{% block page_title %}Apply for Leave{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-title d-flex justify-content-between align-items-center">
+                <span>New Leave Request</span>
+                <span class="badge bg-info-subtle text-info small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Requests go to your class teacher / school admin
+                </span>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Start date</label>
+                            {{ form.start_date }}
+                            {{ form.start_date.errors }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">End date</label>
+                            {{ form.end_date }}
+                            {{ form.end_date.errors }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        {{ form.reason }}
+                        {{ form.reason.errors }}
+                    </div>
+
+                    {% if form.additional_notes %}
+                        <div class="mb-3">
+                            <label class="form-label">Additional notes (optional)</label>
+                            {{ form.additional_notes }}
+                            {{ form.additional_notes.errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i> Submit Request
+                        </button>
+                        <a href="{% url 'communication:my_leaves' %}" class="btn btn-outline-secondary btn-sm">
+                            View my leave history
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side panel: info -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-title">How leave works</div>
+            <div class="card-body">
+                <ul class="small mb-0">
+                    <li>Submit leave as early as possible before the dates.</li>
+                    <li>Your teacher/admin will review and approve or reject.</li>
+                    <li>Check the status anytime in “My Leave Requests”.</li>
+                    <li>For medical leave, upload or share documents with school if required.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

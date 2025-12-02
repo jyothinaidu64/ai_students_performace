@@ -1,0 +1,51 @@
+<div class="card" style="padding:1.5rem;">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            {% if current_school %}
+                <div style="font-size:1.25rem;font-weight:700;">
+                    {{ current_school.name }}
+                </div>
+                {% if current_school.tagline %}
+                    <div class="text-muted-small">{{ current_school.tagline }}</div>
+                {% endif %}
+            {% endif %}
+
+            <div style="margin-top:0.75rem;">
+                <div><strong>Student:</strong> {{ student.first_name }} {{ student.last_name }}</div>
+                <div><strong>Class:</strong> {{ student.school_class }}</div>
+                <div><strong>Admission No:</strong> {{ student.admission_number }}</div>
+            </div>
+        </div>
+
+        <div style="text-align:right;">
+            {% if student.photo %}
+                <img src="{{ student.photo.url }}" alt="Student photo"
+                     style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:2px solid #e5e7eb;">
+            {% else %}
+                <div style="
+                     width:80px;height:80px;border-radius:8px;
+                     background:linear-gradient(135deg,#e5e7eb,#d1d5db);
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:1.8rem;color:#4b5563;
+                ">
+                    {{ student.first_name|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="d-flex justify-content-end" style="margin-top:2rem;">
+    <div style="text-align:center;">
+        {% if class_teacher.teacher_signature %}
+            <img src="{{ class_teacher.teacher_signature.url }}"
+                 alt="Teacher signature"
+                 style="max-width:160px;max-height:80px;object-fit:contain;">
+        {% else %}
+            <div style="height:40px;"></div>
+        {% endif %}
+        <div style="border-top:1px solid #d1d5db;margin-top:0.25rem;padding-top:0.1rem;font-size:0.8rem;">
+            Class Teacher<br>
+            {{ class_teacher.get_full_name|default:class_teacher.username }}
+        </div>
+    </div>
+</div>

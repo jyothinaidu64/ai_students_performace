@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Announcements • School Intelligence{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-title d-flex justify-content-between align-items-center">
+        <span>Latest Announcements</span>
+        <span class="text-muted small">
+            Showing latest notices from the school.
+        </span>
+    </div>
+
+    {% if announcements %}
+        <ul class="list-group list-group-flush">
+            {% for ann in announcements %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">{{ ann.title }}</h6>
+                            {% if ann.body %}
+                                <p class="mb-1 small">
+                                    {{ ann.body|linebreaksbr }}
+                                </p>
+                            {% endif %}
+                            {% if ann.target_audience %}
+                                <span class="badge bg-secondary-subtle text-secondary small">
+                                    {{ ann.get_target_audience_display|default:ann.target_audience }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="text-end small text-muted">
+                            {{ ann.created_at|date:"d M Y, H:i" }}<br>
+                            {% if ann.created_by %}
+                                <span>By {{ ann.created_by.get_full_name|default:ann.created_by.username }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted">
+                No announcements yet.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

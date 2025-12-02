@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block page_title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-title">Access denied</div>
+    <div class="card-body">
+        <p class="mb-2">
+            {{ reason|default:"You are not allowed to view this page." }}
+        </p>
+        <a href="{% url 'finance:my_fees' %}" class="btn btn-secondary btn-sm">
+            Back to My Fees
+        </a>
+    </div>
+</div>
+{% endblock %}

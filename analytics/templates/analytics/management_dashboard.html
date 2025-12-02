@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Management Dashboard • School Intelligence{% endblock %}
+{% block page_title %}Management Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-title">Total Students</div>
+            <div class="card-body">
+                <h4 class="mb-0">{{ total }}</h4>
+                <p class="text-muted small mb-0">
+                    Included in current filters.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">High-risk Students</div>
+            <div class="card-body">
+                <h4 class="mb-0 text-danger">{{ high_count }}</h4>
+                {% if high_pct is not None %}
+                    <p class="text-muted small mb-0">
+                        {{ high_pct|floatformat:1 }}% of filtered students.
+                    </p>
+                {% else %}
+                    <p class="text-muted small mb-0">
+                        Students flagged as high risk.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Low-risk Students</div>
+            <div class="card-body">
+                <h4 class="mb-0 text-success">{{ low_count }}</h4>
+                {% if low_pct is not None %}
+                    <p class="text-muted small mb-0">
+                        {{ low_pct|floatformat:1 }}% of filtered students.
+                    </p>
+                {% else %}
+                    <p class="text-muted small mb-0">
+                        Students currently considered low risk.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-3 mt-md-0">
+        <div class="card">
+            <div class="card-title">Model Info</div>
+            <div class="card-body">
+                <p class="mb-1">
+                    <strong>Version:</strong> {{ model_info.version|default:"v1.0" }}
+                </p>
+                <p class="mb-1 small text-muted">
+                    {{ model_info.description|default:"Risk model trained on internal historical data." }}
+                </p>
+                <p class="mb-0 small text-muted">
+                    Last trained: {{ model_info.last_trained|default:"N/A" }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Filters + Export #}
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row gy-2 gx-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Class</label>
+                <select name="class" class="form-select form-select-sm">
+                    <option value="all" {% if selected_class == "all" %}selected{% endif %}>All classes</option>
+                    {% for cls in classes %}
+                        <option value="{{ cls.id }}" {% if selected_class|stringformat:"s" == cls.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cls }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Risk filter</label>
+                <select name="risk" class="form-select form-select-sm">
+                    <option value="all" {% if selected_risk == "all" %}selected{% endif %}>All</option>
+                    <option value="high" {% if selected_risk == "high" %}selected{% endif %}>High risk only</option>
+                    <option value="low" {% if selected_risk == "low" %}selected{% endif %}>Low risk only</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Sort by</label>
+                <select name="sort_by" class="form-select form-select-sm">
+                    <option value="risk_desc" {% if sort_by == "risk_desc" %}selected{% endif %}>Risk (high → low)</option>
+                    <option value="risk_asc" {% if sort_by == "risk_asc" %}selected{% endif %}>Risk (low → high)</option>
+                    <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Name A → Z</option>
+                    <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Name Z → A</option>
+                    <option value="class_asc" {% if sort_by == "class_asc" %}selected{% endif %}>Class A → Z</option>
+                    <option value="class_desc" {% if sort_by == "class_desc" %}selected{% endif %}>Class Z → A</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Search (username / admission)</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search…">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="d-flex justify-content-end mt-2">
+            <a href="{% url 'management_export_csv' %}?class={{ selected_class }}&risk={{ selected_risk }}&sort_by={{ sort_by }}&search={{ search_query }}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-download me-1"></i> Export CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+{# Subject averages (optional small summary) #}
+{% if subject_averages %}
+<div class="card mb-3">
+    <div class="card-title">Average scores by subject (filtered students)</div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-3">
+            {% for subj, avg in subject_averages.items %}
+                <div class="small">
+                    <span class="text-muted">{{ subj }}:</span>
+                    <strong>{{ avg|floatformat:1 }}%</strong>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Main table #}
+<div class="card">
+    <div class="card-title d-flex justify-content-between align-items-center">
+        <span>Students ({{ total }})</span>
+        <span class="text-muted small">
+            Showing risk predictions per student.
+        </span>
+    </div>
+
+    {% if rows %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th class="text-center">Risk</th>
+                        <th class="text-end">Probability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>
+                                {{ row.student.user.get_full_name|default:row.student.user.username }}<br>
+                                <span class="text-muted small">
+                                    {{ row.student.admission_number }}
+                                </span>
+                            </td>
+                            <td class="small">
+                                {{ row.student.school_class }}
+                            </td>
+                            <td class="text-center">
+                                {% if row.risk_label == "High" %}
+                                    <span class="badge bg-danger-subtle text-danger">High</span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success">Low</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end small">
+                                {{ row.risk_proba|floatformat:3 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body">
+            <p class="mb-0 text-muted">
+                No students match the current filters.
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
